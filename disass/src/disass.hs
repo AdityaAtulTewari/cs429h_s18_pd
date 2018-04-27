@@ -1,6 +1,7 @@
+module Main where
 
+main :: IO ()
 main = do
-  args <- getArgs
+  args <- getArgs;
   content <- readFile (args !! 0)
-  let linesOfFiles = lines content
-  putStrLn linesOfFiles
+  writeFile "output.txt" (map toUpper content)
