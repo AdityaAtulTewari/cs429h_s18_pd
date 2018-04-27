@@ -6,11 +6,6 @@ def error(message):
     sys.exit()
 
 # main
-if len(sys.argv) < 2:
-    error("Enter one file")
-if len(sys.argv) > 2:
-    error("Don't enter more than one file")
-
 source = sys.argv[1]
 with open(source) as f:
     source = [x.strip() for x in f.readlines()]
