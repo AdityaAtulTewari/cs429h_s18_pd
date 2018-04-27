@@ -7,7 +7,8 @@ fn translate(asm: &Vec<&str>, progp: &String)
 {
   for line in asm.iter()
   {
-
+    let input:Vec<u8> = Vec::from(*line);
+    let inputp: Vec<char> = input.iter().map(|&e| e as char).collect::<Vec<char>>();
   }
 }
 
