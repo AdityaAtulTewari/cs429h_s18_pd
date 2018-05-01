@@ -2,11 +2,6 @@ import sys
 
 hd = '0123456789ABCDEF'
 
-# exits with message
-def error(message):
-    print "\033[1m\033[91m[!] %s!\033[0m" % message
-    sys.exit()
-
 def comment(message):
     return "\033[1m\033[90m%s\033[0m" % message
 
@@ -66,14 +61,13 @@ for line in source:
         continue
 
     instruction = int(line, 16)
-    #bin_ins = '{0:016b}'.format(instruction)
     o, a, b, t, v = unpack(instruction)
     hex_ins = hd[o] + hd[a] + ' ' + hd[b] + hd[t]
     asm_ins = get_asm(o, a, b, t, v)
+
     if output:
         print '\t' + asm_ins
     else:
-        #comment('(' + bin_ins + ')')
         print "%4d %s %s %s" % (pc, warning(hex_ins), comment('->'), notice(asm_ins))
 
     pc += 1
