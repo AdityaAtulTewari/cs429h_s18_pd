@@ -18,7 +18,51 @@ module main();
 
     counter ctr(halt,clk);
 
-    reg branch_predictor_ON = 1;
+    ////////////
+    // Branch //
+    ////////////
+    
+    /* 
+    always @(posedge clk) begin
+        $display("state of branch cache: ");
+        $display("entry 1: %h", branch_cache[branch_c-1]);
+        $display("entry 2: %h", branch_cache[branch_c-2]);
+        $display("entry 3: %h", branch_cache[branch_c-3]);
+        $display("entry 4: %h", branch_cache[branch_c-4]);
+        $display("entry 5: %h", branch_cache[branch_c-5]);
+        $display("entry 6: %h", branch_cache[branch_c-6]);
+        $display("entry 7: %h", branch_cache[branch_c-7]);
+        $display("entry 8: %h", branch_cache[branch_c]);
+    end
+    */
+
+    // [32] valid, [31:16] - PC, [15:0] - jump_to
+    reg [32:0] branch_cache[7:0];
+    reg [2:0] branch_c = 0;
+    
+    function automatic [16:0] branch_prediction;
+        input [15:0] current_PC;
+        begin
+            if (branch_cache[branch_c][32] && branch_cache[branch_c][31:16] == current_PC)
+                branch_prediction = {1'b1, branch_cache[branch_c][15:0]};
+            else if (branch_cache[branch_c-1][32] && branch_cache[branch_c-1][31:16] == current_PC)
+                branch_prediction = {1'b1, branch_cache[branch_c-1][15:0]};
+            else if (branch_cache[branch_c-2][32] && branch_cache[branch_c-2][31:16] == current_PC)
+                branch_prediction = {1'b1, branch_cache[branch_c-2][15:0]};
+            else if (branch_cache[branch_c-3][32] && branch_cache[branch_c-3][31:16] == current_PC)
+                branch_prediction = {1'b1, branch_cache[branch_c-3][15:0]};
+            else if (branch_cache[branch_c-4][32] && branch_cache[branch_c-4][31:16] == current_PC)
+                branch_prediction = {1'b1, branch_cache[branch_c-4][15:0]};
+            else if (branch_cache[branch_c-5][32] && branch_cache[branch_c-5][31:16] == current_PC)
+                branch_prediction = {1'b1, branch_cache[branch_c-5][15:0]};
+            else if (branch_cache[branch_c-6][32] && branch_cache[branch_c-6][31:16] == current_PC)
+                branch_prediction = {1'b1, branch_cache[branch_c-6][15:0]};
+            else if (branch_cache[branch_c-7][32] && branch_cache[branch_c-7][31:16] == current_PC)
+                branch_prediction = {1'b1, branch_cache[branch_c-7][15:0]};
+            else
+                branch_prediction = 0;
+        end
+    endfunction
 
     ////////////
     // Memory //
@@ -59,25 +103,18 @@ module main();
         regs_raddr1,regs_rdata1,
         regs_should_write,regs_waddr,regs_wdata);
 
-    ////////////
-    // Branch //
-    ////////////
-
-    reg branch_V = 0;
-    reg [15:0] branch_PC = 0;
-    reg [15:0] branch_jump_to = 0;
-
 
     ////////
     // f0 //
     ////////
 
+    wire [16:0] f0_predict = branch_prediction(f0_PC);
     wire f0_V = load_mis ? 0 : 1; 
     reg [15:0] f0_PC = 16'h0000; // by default, first instruction at mem addr 0
     wire [15:0] f0_nextpc = wb_flush_should ? wb_flush_to
                         : load_mis ? f0_PC 
                         : f0_mis ? f0_PC+1
-                        : branch_V && f0_PC == branch_PC ? branch_jump_to
+                        : f0_predict[16] ? f0_predict[15:0]
                         : f0_PC + 2;
 
     wire f0_mis = f0_V && f0_PC[0];
@@ -195,12 +232,6 @@ module main();
                         : load_is_ld ? 0
                         : load_is_st ? load_dest
                         : 0;
-
-    // decoding ins    
-    // assign branches
-    //assign branch_PC = wb_jump_should ? wb_PC : branch_PC;
-    //assign branch_jump_to = wb_jump_should ? wb_jump_to : branch_jump_to;
-
 
     wire [3:0] load_opcode = load_ins[15:12];
     wire [3:0] load_dest = load_ins[3:0];
@@ -518,9 +549,8 @@ module main();
             end
 
             if (wb_jump_should) begin
-                branch_V <= branch_predictor_ON;
-                branch_PC <= wb_PC;
-                branch_jump_to <= wb_jump_to;
+                branch_cache[branch_c] <= {1'b1, wb_PC, wb_jump_to};
+                branch_c <= branch_c + 1;
             end
         end 
 
