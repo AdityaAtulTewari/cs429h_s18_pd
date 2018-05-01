@@ -36,6 +36,8 @@ module main();
     end
     */
 
+   reg branch_predictor_ON = 1;
+
     // [32] valid, [31:16] - PC, [15:0] - jump_to
     reg [32:0] branch_cache[7:0];
     reg [2:0] branch_c = 0;
@@ -43,7 +45,9 @@ module main();
     function automatic [16:0] branch_prediction;
         input [15:0] current_PC;
         begin
-            if (branch_cache[branch_c][32] && branch_cache[branch_c][31:16] == current_PC)
+            if (!branch_predictor_ON)
+                branch_prediction = 0;
+            else if (branch_cache[branch_c][32] && branch_cache[branch_c][31:16] == current_PC)
                 branch_prediction = {1'b1, branch_cache[branch_c][15:0]};
             else if (branch_cache[branch_c-1][32] && branch_cache[branch_c-1][31:16] == current_PC)
                 branch_prediction = {1'b1, branch_cache[branch_c-1][15:0]};
