@@ -19,56 +19,6 @@ module main();
     counter ctr(halt,clk);
 
     ////////////
-    // Branch //
-    ////////////
-    
-    /* 
-    always @(posedge clk) begin
-        $display("state of branch cache: ");
-        $display("entry 1: %h", branch_cache[branch_c-1]);
-        $display("entry 2: %h", branch_cache[branch_c-2]);
-        $display("entry 3: %h", branch_cache[branch_c-3]);
-        $display("entry 4: %h", branch_cache[branch_c-4]);
-        $display("entry 5: %h", branch_cache[branch_c-5]);
-        $display("entry 6: %h", branch_cache[branch_c-6]);
-        $display("entry 7: %h", branch_cache[branch_c-7]);
-        $display("entry 8: %h", branch_cache[branch_c]);
-    end
-    */
-
-   reg branch_predictor_ON = 1;
-
-    // [32] valid, [31:16] - PC, [15:0] - jump_to
-    reg [32:0] branch_cache[7:0];
-    reg [2:0] branch_c = 0;
-    
-    function automatic [16:0] branch_prediction;
-        input [15:0] current_PC;
-        begin
-            if (!branch_predictor_ON)
-                branch_prediction = 0;
-            else if (branch_cache[branch_c][32] && branch_cache[branch_c][31:16] == current_PC)
-                branch_prediction = {1'b1, branch_cache[branch_c][15:0]};
-            else if (branch_cache[branch_c-1][32] && branch_cache[branch_c-1][31:16] == current_PC)
-                branch_prediction = {1'b1, branch_cache[branch_c-1][15:0]};
-            else if (branch_cache[branch_c-2][32] && branch_cache[branch_c-2][31:16] == current_PC)
-                branch_prediction = {1'b1, branch_cache[branch_c-2][15:0]};
-            else if (branch_cache[branch_c-3][32] && branch_cache[branch_c-3][31:16] == current_PC)
-                branch_prediction = {1'b1, branch_cache[branch_c-3][15:0]};
-            else if (branch_cache[branch_c-4][32] && branch_cache[branch_c-4][31:16] == current_PC)
-                branch_prediction = {1'b1, branch_cache[branch_c-4][15:0]};
-            else if (branch_cache[branch_c-5][32] && branch_cache[branch_c-5][31:16] == current_PC)
-                branch_prediction = {1'b1, branch_cache[branch_c-5][15:0]};
-            else if (branch_cache[branch_c-6][32] && branch_cache[branch_c-6][31:16] == current_PC)
-                branch_prediction = {1'b1, branch_cache[branch_c-6][15:0]};
-            else if (branch_cache[branch_c-7][32] && branch_cache[branch_c-7][31:16] == current_PC)
-                branch_prediction = {1'b1, branch_cache[branch_c-7][15:0]};
-            else
-                branch_prediction = 0;
-        end
-    endfunction
-
-    ////////////
     // Memory //
     ////////////
 
@@ -89,7 +39,7 @@ module main();
     
     ///////////////
     // Registers //
-    ///////////////
+    //////////////
 
     wire [3:0] regs_raddr0;
     wire [15:0] regs_rdata0;
@@ -107,18 +57,15 @@ module main();
         regs_raddr1,regs_rdata1,
         regs_should_write,regs_waddr,regs_wdata);
 
-
     ////////
     // f0 //
     ////////
 
-    wire [16:0] f0_predict = branch_prediction(f0_PC);
     wire f0_V = load_mis ? 0 : 1; 
     reg [15:0] f0_PC = 16'h0000; // by default, first instruction at mem addr 0
     wire [15:0] f0_nextpc = wb_flush_should ? wb_flush_to
                         : load_mis ? f0_PC 
                         : f0_mis ? f0_PC+1
-                        : f0_predict[16] ? f0_predict[15:0]
                         : f0_PC + 2;
 
     wire f0_mis = f0_V && f0_PC[0];
@@ -170,6 +117,8 @@ module main();
     wire [3:0] dec_src_lo = dec_ins[7:4];
 
     wire dec_is_sub = dec_opcode == 0;
+    wire dec_is_add = dec_opcode == 1;
+    wire dec_is_mul = dec_opcode == 2;
     wire dec_is_movl = dec_opcode == 8;
     wire dec_is_movh = dec_opcode == 9;
     wire dec_is_jump = dec_opcode == 14 && (dec_src_lo >= 0 && dec_src_lo <= 3);
@@ -177,14 +126,14 @@ module main();
     wire dec_is_st = dec_opcode == 15 && dec_src_lo == 1;
 
     // cases where we need to load some regs
-    assign regs_raddr0 =  dec_is_sub ? dec_src_hi
+    assign regs_raddr0 =  dec_is_sub || dec_is_add || dec_is_mul ? dec_src_hi
                         : dec_is_movh ? dec_dest 
                         : dec_is_jump ? dec_src_hi
                         : dec_is_ld ? dec_src_hi
                         : dec_is_st ? dec_src_hi
                         : 0;
 
-    assign regs_raddr1 =  dec_is_sub ? dec_src_lo
+    assign regs_raddr1 =  dec_is_sub || dec_is_add || dec_is_mul ? dec_src_lo
                         : dec_is_movh ? 0
                         : dec_is_jump ? dec_dest
                         : dec_is_ld ? 0
@@ -223,20 +172,21 @@ module main();
                         : wb_V && wb_reg_should && wb_reg_addr == load_regs1_needed ? wb_reg_data 
                         : load_regs_rdata1;
 
-    wire [3:0] load_regs0_needed =  load_is_sub ? load_src_hi
+    wire [3:0] load_regs0_needed =  load_is_sub || load_is_add || load_is_mul ? load_src_hi
                         : load_is_movh ? load_dest 
                         : load_is_jump ? load_src_hi
                         : load_is_ld ? load_src_hi
                         : load_is_st ? load_src_hi
                         : 0;
 
-    wire[3:0] load_regs1_needed =  load_is_sub ? load_src_lo
+    wire[3:0] load_regs1_needed =  load_is_sub || load_is_add || load_is_mul ? load_src_lo
                         : load_is_movh ? 0
                         : load_is_jump ? load_dest
                         : load_is_ld ? 0
                         : load_is_st ? load_dest
                         : 0;
 
+    // decoding ins
     wire [3:0] load_opcode = load_ins[15:12];
     wire [3:0] load_dest = load_ins[3:0];
 
@@ -245,6 +195,8 @@ module main();
     wire [3:0] load_src_lo = load_ins[7:4];
 
     wire load_is_sub = load_opcode == 0;
+    wire load_is_add = load_opcode == 1;
+    wire load_is_mul = load_opcode == 2;
     wire load_is_movl = load_opcode == 8;
     wire load_is_movh = load_opcode == 9;
     wire load_is_jump = load_opcode == 14 && (load_src_lo >= 0 && load_src_lo <= 3);
@@ -304,14 +256,14 @@ module main();
     wire [15:0] load2_regs_fwd_rdata0 = wb_V && wb_reg_should && wb_reg_addr == load2_regs0_needed ? wb_reg_data : load2_regs_rdata0;
     wire [15:0] load2_regs_fwd_rdata1 = wb_V && wb_reg_should && wb_reg_addr == load2_regs1_needed ? wb_reg_data : load2_regs_rdata1;
 
-    wire [3:0] load2_regs0_needed =  load2_is_sub ? load2_src_hi
+    wire [3:0] load2_regs0_needed =  load2_is_sub || load2_is_add || load2_is_mul ? load2_src_hi
                         : load2_is_movh ? load2_dest 
                         : load2_is_jump ? load2_src_hi
                         : load2_is_ld ? load2_src_hi
                         : load2_is_st ? load2_src_hi
                         : 0;
 
-    wire[3:0] load2_regs1_needed =  load2_is_sub ? load2_src_lo
+    wire[3:0] load2_regs1_needed =  load2_is_sub || load2_is_add || load2_is_mul ? load2_src_lo
                         : load2_is_movh ? 0
                         : load2_is_jump ? load2_dest
                         : load2_is_ld ? 0
@@ -327,6 +279,8 @@ module main();
     wire [3:0] load2_src_lo = load2_ins[7:4];
 
     wire load2_is_sub = load2_opcode == 0;
+    wire load2_is_add = load2_opcode == 1;
+    wire load2_is_mul = load2_opcode == 2;
     wire load2_is_movl = load2_opcode == 8;
     wire load2_is_movh = load2_opcode == 9;
     wire load2_is_jump = load2_opcode == 14 && (load2_src_lo >= 0 && load2_src_lo <= 3);
@@ -344,9 +298,9 @@ module main();
                             : load2_regs_fwd_rdata0;
     wire [15:0] load2_movh_res = { load2_src[7:0], load2_movh_tmp[7:0] };
 
-    wire load2_reg_should = load2_V && load2_dest != 0 && (load2_is_sub || load2_is_movl || load2_is_movh || load2_is_ld);
+    wire load2_reg_should = load2_V && load2_dest != 0 && (load2_is_sub || load2_is_add || load2_is_mul || load2_is_movl || load2_is_movh || load2_is_ld);
     wire [3:0] load2_reg_addr = load2_dest;
-    wire [15:0] load2_reg_data = load2_is_sub ? load2_sub_res
+    wire [15:0] load2_reg_data = load2_is_sub || load2_is_add || load2_is_mul ? load2_sub_res
                     : load2_is_movl ? load2_movl_res
                     : load2_is_movh ? load2_movh_res
                     : load2_is_ld ? 0
@@ -371,8 +325,6 @@ module main();
 
         wb_past_wen1 <= mem_should_write;
         wb_past_waddr1 <= mem_waddr;
-    //wire wb_st_mis = wb_V && wb_is_st && wb_mem_reg1[0];
-    //wire [15:0] wb_st_mis_addr = wb_mem_reg1;
         wb_past_wdata1 <= mem_wdata;
 
         wb_is_screwed <= load2_is_screwed;
@@ -410,20 +362,22 @@ module main();
     wire [3:0] wb_src_lo = wb_ins[7:4];
 
     wire wb_is_sub = wb_opcode == 0;
+    wire wb_is_add = wb_opcode == 1;
+    wire wb_is_mul = wb_opcode == 2;
     wire wb_is_movl = wb_opcode == 8;
     wire wb_is_movh = wb_opcode == 9;
     wire wb_is_jump = wb_opcode == 14 && (wb_src_lo >= 0 && wb_src_lo <= 3);
     wire wb_is_ld = wb_opcode == 15 && wb_src_lo == 0;
     wire wb_is_st = wb_opcode == 15 && wb_src_lo == 1;
 
-    wire wb_should_halt = !(wb_is_sub || wb_is_movl || wb_is_movh || wb_is_jump || wb_is_ld || wb_is_st);
+    wire wb_should_halt = !(wb_is_sub || wb_is_add || wb_is_mul || wb_is_movl || wb_is_movh || wb_is_jump || wb_is_ld || wb_is_st);
 
     // some intermediate wires
     wire [15:0] wb_sub_tmp1 = wb_src_hi == 0 ? 0 : wb_regs_rdata0;
     wire [15:0] wb_sub_tmp2 = wb_src_lo == 0 ? 0 : wb_regs_rdata1;
-    //wire wb_st_mis = wb_V && wb_is_st && wb_mem_reg1[0];
-    //wire [15:0] wb_st_mis_addr = wb_mem_reg1;
     wire [15:0] wb_sub_res = wb_sub_tmp1 - wb_sub_tmp2;
+    wire [15:0] wb_add_res = wb_sub_tmp1 + wb_sub_tmp2;
+    wire [15:0] wb_mul_res = wb_sub_tmp1 * wb_sub_tmp2;
 
     wire [15:0] wb_movl_res = { {8{wb_src[7]}}, wb_src[7:0] };
     wire [15:0] wb_movh_tmp = wb_dest == 0 ? 0 
@@ -451,17 +405,21 @@ module main();
                             : wb_mem_rdata1;
 
     // cases where we need to print
-    wire wb_print_should = wb_dest == 0 && (wb_is_sub || wb_is_movl || wb_is_movh || wb_is_ld);
+    wire wb_print_should = wb_dest == 0 && (wb_is_sub || wb_is_add || wb_is_mul || wb_is_movl || wb_is_movh || wb_is_ld);
     wire [15:0] wb_print_this = wb_is_sub ? wb_sub_res
+                            : wb_is_add ? wb_add_res 
+                            : wb_is_mul ? wb_mul_res
                             : wb_is_movl ? wb_movl_res
                             : wb_is_movh ? wb_movh_res
                             : wb_is_ld ? wb_ld_res
                             : 1;
 
     // cases where we need to set reg
-    wire wb_reg_should = wb_dest != 0 && (wb_is_sub || wb_is_movl || wb_is_movh || wb_is_ld);
+    wire wb_reg_should = wb_dest != 0 && (wb_is_sub || wb_is_add || wb_is_mul || wb_is_movl || wb_is_movh || wb_is_ld);
     wire [3:0] wb_reg_addr = wb_dest;
     wire [15:0] wb_reg_data = wb_is_sub ? wb_sub_res
+                    : wb_is_add ? wb_add_res
+                    : wb_is_mul ? wb_mul_res
                     : wb_is_movl ? wb_movl_res
                     : wb_is_movh ? wb_movh_res
                     : wb_is_ld ? wb_ld_res
@@ -503,15 +461,13 @@ module main();
     wire [15:1] wb_mem_addr_2 = (wb_mem_reg1[15:1] + 1) % 32768;
     wire [15:0] wb_mem_data_2 = { wb_mem_reg2[7:0], wb_temp_mis_2 };
 
+    //wire wb_st_mis = wb_V && wb_is_st && wb_mem_reg1[0];
+    //wire [15:0] wb_st_mis_addr = wb_mem_reg1;
+
     // FLUSHES 
     // flush condition #1, jmping
-    wire wb_jump_should = wb_V && wb_is_jump && wb_jmp_cond && wb_jump_to != load2_PC;
+    wire wb_jump_should = wb_V && wb_is_jump && wb_jmp_cond;
     wire [15:0] wb_jump_to = wb_dest == 0 ? 0 : wb_regs_rdata1;
-
-    // flush condition #N, jmp mispredict flase
-    wire wb_jump_mispredict = wb_V && wb_is_jump && !wb_jmp_cond && load2_PC != wb_PC+2;
-    wire [15:0] wb_jump_mis_to = wb_PC+2;
-
 
     // flush condiiton #2, store new PC
     // if we wrote to something f0 already loaded but hasnt been executed
@@ -523,12 +479,13 @@ module main();
     wire wb_ld_flush_condition = wb_V && wb_is_st && wb_mis;
     wire [15:0] wb_ld_flush_condition_to = wb_PC + 2;
 
+
+
     // set flushing parameters for f0
-    wire wb_flush_should = wb_V && (wb_jump_should || wb_st_overwriting_mem || wb_ld_flush_condition || load2_is_screwed || wb_jump_mispredict); // || wb_is_screwed;
+    wire wb_flush_should = wb_V && (wb_jump_should || wb_st_overwriting_mem || wb_ld_flush_condition || load2_is_screwed); // || wb_is_screwed;
     wire [15:0] wb_flush_to = wb_jump_should ? wb_jump_to
                             : wb_st_overwriting_mem ? wb_st_overwriting_mem_to
                             : wb_ld_flush_condition ? wb_ld_flush_condition_to
-                            : wb_jump_mispredict ? wb_jump_mis_to 
                             : load2_is_screwed ? wb_PC + 2
                             : 1;
 
@@ -550,11 +507,6 @@ module main();
                 load_V <= 0;
                 dec_V <= 0;
                 f1_V <= 0;
-            end
-
-            if (wb_jump_should) begin
-                branch_cache[branch_c] <= {1'b1, wb_PC, wb_jump_to};
-                branch_c <= branch_c + 1;
             end
         end 
 
