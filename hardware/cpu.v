@@ -117,8 +117,8 @@ module main();
     wire [3:0] dec_src_lo = dec_ins[7:4];
 
     wire dec_is_sub = dec_opcode == 0;
-    wire dec_is_add = dec_opcode == 1;
-    wire dec_is_mul = dec_opcode == 2;
+    wire dec_is_add = dec_opcode == 2;
+    wire dec_is_mul = dec_opcode == 1;
     wire dec_is_movl = dec_opcode == 8;
     wire dec_is_movh = dec_opcode == 9;
     wire dec_is_jump = dec_opcode == 14 && (dec_src_lo >= 0 && dec_src_lo <= 3);
@@ -195,8 +195,8 @@ module main();
     wire [3:0] load_src_lo = load_ins[7:4];
 
     wire load_is_sub = load_opcode == 0;
-    wire load_is_add = load_opcode == 1;
-    wire load_is_mul = load_opcode == 2;
+    wire load_is_add = load_opcode == 2;
+    wire load_is_mul = load_opcode == 1;
     wire load_is_movl = load_opcode == 8;
     wire load_is_movh = load_opcode == 9;
     wire load_is_jump = load_opcode == 14 && (load_src_lo >= 0 && load_src_lo <= 3);
@@ -279,8 +279,8 @@ module main();
     wire [3:0] load2_src_lo = load2_ins[7:4];
 
     wire load2_is_sub = load2_opcode == 0;
-    wire load2_is_add = load2_opcode == 1;
-    wire load2_is_mul = load2_opcode == 2;
+    wire load2_is_add = load2_opcode == 2;
+    wire load2_is_mul = load2_opcode == 1;
     wire load2_is_movl = load2_opcode == 8;
     wire load2_is_movh = load2_opcode == 9;
     wire load2_is_jump = load2_opcode == 14 && (load2_src_lo >= 0 && load2_src_lo <= 3);
@@ -362,8 +362,8 @@ module main();
     wire [3:0] wb_src_lo = wb_ins[7:4];
 
     wire wb_is_sub = wb_opcode == 0;
-    wire wb_is_add = wb_opcode == 1;
-    wire wb_is_mul = wb_opcode == 2;
+    wire wb_is_add = wb_opcode == 2;
+    wire wb_is_mul = wb_opcode == 1;
     wire wb_is_movl = wb_opcode == 8;
     wire wb_is_movh = wb_opcode == 9;
     wire wb_is_jump = wb_opcode == 14 && (wb_src_lo >= 0 && wb_src_lo <= 3);
