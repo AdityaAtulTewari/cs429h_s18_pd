@@ -35,7 +35,12 @@ typedef struct Token token;
 /* Kinds of tokens */
 enum Kind
 {
+    LTE,
+    GTE,
+    GT,
+    LT,
     ELSE,    // else
+    MINUS,   // -
     END,     // <end of string>
     EQ,      // =
     EQEQ,    // ==
@@ -370,12 +375,21 @@ uint64_t e2(int doit)
 uint64_t e3(int doit)
 {
   uint64_t value = e2(doit);
+  if(peek() == PLUS)
   while (peek() == PLUS)
   {
     if(doit) fputs("\t\tpush %rsi\n", f);
     consume();
     e2(doit);
     if(doit) fputs("\t\tpop %rax\n\t\tadd %rax, %rsi\n", f);
+  }
+  else if(peek == MINUS)
+  while (peek() == MINUS)
+  {
+    if(doit) fputs("\t\tpush %rsi\n", f);
+    consume();
+    e2(doit);
+    if(doit) fputs("\t\tpush %rsi\n", f);
   }
   return value;
 }
@@ -384,6 +398,7 @@ uint64_t e3(int doit)
 uint64_t e4(int doit)
 {
   uint64_t value = e3(doit);
+  if(peek() == EQEQ)
   while (peek() == EQEQ)
   {
     consume();
@@ -395,6 +410,66 @@ uint64_t e4(int doit)
       fputs("\t\tcmp %rsi, %rax\n", f);
       fputs("\t\tmov $0, %rax\n", f);
       fputs("\t\tsete %al\n", f);
+      fputs("\t\tmov %rax, %rsi\n", f);
+    }
+  }
+  else if (peek() == LTE)
+  while (peek() == LTE)
+  {
+    consume();
+    if(doit){fputs("\t\tpush %rsi\n", f);}
+    e3(doit);
+    if(doit)
+    {
+      fputs("\t\tpop %rax\n", f);
+      fputs("\t\tcmp %rsi, %rax\n", f);
+      fputs("\t\tmov $0, %rax\n", f);
+      fputs("\t\tsetle %al\n", f);
+      fputs("\t\tmov %rax, %rsi\n", f);
+    }
+  }
+  else if (peek() == GTE)
+  while (peek() == GTE)
+  {
+    consume();
+    if(doit){fputs("\t\tpush %rsi\n", f);}
+    e3(doit);
+    if(doit)
+    {
+      fputs("\t\tpop %rax\n", f);
+      fputs("\t\tcmp %rsi, %rax\n", f);
+      fputs("\t\tmov $0, %rax\n", f);
+      fputs("\t\tsetge %al\n", f);
+      fputs("\t\tmov %rax, %rsi\n", f);
+    }
+  }
+  else if (peek() == LT)
+  while (peek() == LT)
+  {
+    consume();
+    if(doit){fputs("\t\tpush %rsi\n", f);}
+    e3(doit);
+    if(doit)
+    {
+      fputs("\t\tpop %rax\n", f);
+      fputs("\t\tcmp %rsi, %rax\n", f);
+      fputs("\t\tmov $0, %rax\n", f);
+      fputs("\t\tsetl %al\n", f);
+      fputs("\t\tmov %rax, %rsi\n", f);
+    }
+  }
+  else if (peek() == GT)
+  while (peek() == GT)
+  {
+    consume();
+    if(doit){fputs("\t\tpush %rsi\n", f);}
+    e3(doit);
+    if(doit)
+    {
+      fputs("\t\tpop %rax\n", f);
+      fputs("\t\tcmp %rsi, %rax\n", f);
+      fputs("\t\tmov $0, %rax\n", f);
+      fputs("\t\tsetg %al\n", f);
       fputs("\t\tmov %rax, %rsi\n", f);
     }
   }
@@ -572,11 +647,28 @@ void tokenize(char* prog)
       case '+':
         last->kind = PLUS;
         break;
+      case '-' :
+        last->kind = MINUS;
+        break;
+      case '<':
+        last->kind = LT;
+        break;
+      case '>':
+        last->kind = GT;
+        break;
       case '=':
         if(prog[i+1] == '=')
         {
           last->kind = EQEQ;
           j++;
+        }
+        else if(prog[i+1] == '>')
+        {
+          last->kind = GTE;
+        }
+        else if(prog[i+1] == '<')
+        {
+          last->kind = LTE;
         }
         else
         {
