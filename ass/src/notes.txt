@@ -1,0 +1,5 @@
+-The only references to variables that are allowed to exist are the ones that have to do with load and store, a simple mol and moh is inserted before by the
+complier with the label as to signify the need for value for the load store variables.
+
+The gen load register is r15, the compiler should not touch this register, unless it is specifically going to give it up.
+We also note that the generic return register is r14

@@ -3,6 +3,16 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::collections::HashMap;
 
+enum Line
+{
+  DATAM,
+  TEXTM,
+  MOV(u16, u8),
+  MOL(u8, u8),
+  MOH(u8, u8),
+
+}
+
 fn translate(asm: &Vec<&str>, progp: &String)
 {
   for line in asm.iter()
