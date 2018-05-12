@@ -92,8 +92,6 @@ fn assemble(prog: Vec<Line>)
   }
   return true;
 }
-}
-
 #[derive(Clone)]
 enum Line
 {
