@@ -383,7 +383,7 @@ uint64_t e3(int doit)
     e2(doit);
     if(doit) fputs("\t\tpop %rax\n\t\tadd %rax, %rsi\n", f);
   }
-  else if(peek == MINUS)
+  else if(peek() == MINUS)
   while (peek() == MINUS)
   {
     if(doit) fputs("\t\tpush %rsi\n", f);
