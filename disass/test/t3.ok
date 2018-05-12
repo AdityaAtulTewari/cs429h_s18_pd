@@ -1,0 +1,19 @@
+_main:
+	mol %r1, 5
+	mol %r2, 1
+	mol %r3, 6
+	mol %r0, 97
+	sub %r1, %r1, %r2
+	sub %r1, %r1, %r0
+	jnz %r3, %r1
+	mol %r1, 255
+	mol %r2, 98
+	sto %r2, %r1
+	lod %r0, %r1
+	sub %r0, %r2, %r0
+	mol %r3, 22
+	mol %r1, 98
+	sto %r1, %r3
+	lod %r0, %r3
+	mol %r0, 10
+	hlt

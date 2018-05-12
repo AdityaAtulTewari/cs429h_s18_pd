@@ -1,2 +1,8 @@
-main:
-  mul r0,r0,r0
+_main:
+	mol %r0, 104
+	mol %r0, 101
+	mol %r0, 108
+	mol %r0, 108
+	mol %r0, 111
+	mol %r0, 10
+	hlt

@@ -1,0 +1,9 @@
+_main:
+	mol %r1, 48
+	mol %r5, 5
+	mol %r4, 240
+	sto %r1, %r5
+	sto %r5, %r4
+	lod %r0, %r5
+	mol %r0, 10
+	hlt

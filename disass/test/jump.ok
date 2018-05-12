@@ -1,0 +1,10 @@
+_main:
+	mol %r4, 6
+	jz %r4, %r0
+	hlt
+	mol %r0, 52
+	mol %r8, 255
+	jnz %r8, %r0
+	mol %r0, 53
+	mol %r0, 10
+	hlt

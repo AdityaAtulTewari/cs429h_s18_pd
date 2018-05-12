@@ -1,0 +1,24 @@
+_main:
+	mol %r6, 113
+	mol %r0, 53
+	mol %r0, 53
+	mol %r0, 53
+	mol %r0, 53
+	mol %r0, 53
+	mol %r0, 53
+	mol %r5, 64
+	mol %r0, 54
+	mol %r0, 54
+	mol %r0, 54
+	mol %r0, 54
+	mol %r0, 54
+	mol %r0, 54
+	sub %r0, %r6, %r5
+	mol %r0, 55
+	mol %r0, 55
+	mol %r0, 55
+	mol %r0, 55
+	mol %r0, 55
+	mol %r0, 55
+	mol %r0, 10
+	hlt

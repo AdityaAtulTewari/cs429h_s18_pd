@@ -1,0 +1,16 @@
+_main:
+	mol %r1, 16
+	moh %r1, 0
+	mol %r2, 65
+	sto %r2, %r1
+	lod %r3, %r1
+	sub %r0, %r0, %r0
+	sub %r0, %r0, %r0
+	sub %r0, %r0, %r0
+	sub %r0, %r0, %r0
+	sub %r0, %r0, %r0
+	sub %r0, %r0, %r0
+	sub %r0, %r3, %r0
+	mol %r0, 10
+	hlt
+	sub %r2, %r0, %r4

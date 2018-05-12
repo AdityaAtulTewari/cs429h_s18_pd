@@ -1,0 +1,7 @@
+_main:
+	mol %r3, 104
+	mol %r2, 101
+	mol %r1, 99
+	sub %r4, %r3, %r2
+	sub %r0, %r1, %r4
+	hlt

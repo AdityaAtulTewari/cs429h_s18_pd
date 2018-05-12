@@ -1,0 +1,29 @@
+_main:
+	mol %r2, 6
+	jz %r2, %r0
+	hlt
+	mol %r0, 79
+	mol %r3, 14
+	jnz %r3, %r2
+	hlt
+	mol %r0, 102
+	jnz %r9, %r0
+	mol %r1, 114
+	sto %r1, %r2
+	mol %r0, 10
+	mol %r1, 189
+	sub %r0, %r0, %r1
+	mol %r4, 36
+	js %r4, %r1
+	mol %r0, 106
+	hlt
+	mol %r0, 111
+	mol %r6, 0
+	jns %r6, %r1
+	mol %r0, 117
+	lod %r6, %r2
+	sub %r0, %r6, %r0
+	mol %r0, 115
+	mol %r0, 101
+	mol %r0, 10
+	hlt

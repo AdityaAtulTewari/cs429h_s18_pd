@@ -1,0 +1,10 @@
+_main:
+	mol %r4, 54
+	moh %r4, 170
+	mol %r0, 10
+	mol %r0, 10
+	mol %r0, 10
+	mol %r0, 10
+	sub %r0, %r4, %r0
+	mol %r0, 10
+	hlt

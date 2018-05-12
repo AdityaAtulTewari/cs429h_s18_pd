@@ -1,0 +1,8 @@
+_main:
+	mol %r5, 8
+	mol %r4, 254
+	js %r5, %r4
+	mol %r0, 65
+	mol %r0, 65
+	mol %r0, 10
+	hlt
